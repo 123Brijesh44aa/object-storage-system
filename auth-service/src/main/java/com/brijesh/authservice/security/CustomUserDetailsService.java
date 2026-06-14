@@ -28,4 +28,12 @@ public class CustomUserDetailsService implements UserDetailsService {
                        new UsernameNotFoundException("User not found : "+ email));
        return new CustomUserDetails(user);
     }
+
+    @Transactional(readOnly = true)
+    public UserDetails loadUserByUuid(String uuid){
+        var user = userRepository.findByUuidWithRoles(uuid)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User not found: "+uuid));
+        return new CustomUserDetails(user);
+    }
 }
