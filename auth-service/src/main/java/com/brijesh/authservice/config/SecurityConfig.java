@@ -39,6 +39,10 @@ public class SecurityConfig {
             "/error"
     };
 
+    private static final String[] ADMIN_URLS = {
+            "/api/v1/admin/**"
+    };
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -48,6 +52,7 @@ public class SecurityConfig {
                 // Authorization rules
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_URLS).permitAll()
+                        .requestMatchers(ADMIN_URLS).hasRole("ADMIN") // url level security
                         .anyRequest().authenticated()
                 )
                 //Stateless - no sessions, no cookies
