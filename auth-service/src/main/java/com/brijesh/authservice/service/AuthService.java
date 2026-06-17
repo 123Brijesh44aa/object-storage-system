@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,6 +45,7 @@ public class AuthService {
     private final AppProperties appProperties;
     private final RefreshTokenService refreshTokenService;
     private final RedisTokenService redisTokenService;
+    private final LoginAttemptService loginAttemptService;
 
 
     // Register
@@ -80,15 +82,30 @@ public class AuthService {
     // Login
 
     public AuthResponse login(LoginRequest request, HttpServletRequest httpRequest){
-        // AuthenticationManager calls CustomUserDetailsService + Bcrypt verify
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(),request.getPassword())
-        );
+        User user = userRepository.findByEmailWithRoles(request.getEmail())
+                .orElseThrow(() -> new AuthException("Invalid credentials"));
 
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        if (loginAttemptService.isAccountLocked(user)){
+            throw new AuthException("Account temporarily locked due to multiple failed login attempts. Try again later.");
+        }
 
-        log.info("User logged in: {}", userDetails.getEmail());
-        return buildAuthResponse(userDetails,httpRequest);
+        try {
+            // AuthenticationManager calls CustomUserDetailsService + Bcrypt verify
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+            log.info("User logged in: {}", userDetails.getEmail());
+            return buildAuthResponse(userDetails, httpRequest);
+        } catch (BadCredentialsException ex){
+            loginAttemptService.recordFailedAttempts(user);
+            throw new AuthException("Invalid Credentials");
+        }
     }
 
     // Refresh

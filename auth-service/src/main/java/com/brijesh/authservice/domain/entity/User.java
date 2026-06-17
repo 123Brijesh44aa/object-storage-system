@@ -5,6 +5,7 @@ import com.brijesh.authservice.domain.enums.AuthProvider;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -52,6 +53,13 @@ public class User extends BaseEntity{
     @Builder.Default
     private Boolean isLocked = false;   // true after brute force detected
 
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer failedLoginAttempts = 0;
+
+    @Column(name = "locked_until")
+    private Instant lockedUntil;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
