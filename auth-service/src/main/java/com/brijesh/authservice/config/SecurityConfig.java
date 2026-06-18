@@ -3,6 +3,7 @@ package com.brijesh.authservice.config;
 
 import com.brijesh.authservice.security.CustomUserDetailsService;
 import com.brijesh.authservice.security.JwtAuthenticationFilter;
+import com.brijesh.authservice.security.RateLimitFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +29,7 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final RateLimitFilter rateLimitFilter;
 
     // - Endpoints anyone can access without a token
     private static final String[] PUBLIC_URLS = {
@@ -60,6 +62,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider())
+                .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
