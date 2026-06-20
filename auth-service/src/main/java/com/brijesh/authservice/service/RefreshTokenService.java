@@ -43,8 +43,16 @@ public class RefreshTokenService {
                 .orElseThrow(() -> new AuthException("Invalid refresh token"));
 
         if (storedToken.getRevoked()) {
-            log.warn("Attempted reuse of revoked refresh token for user{}", storedToken.getUser().getEmail());
-            throw new AuthException("Refresh token has been revoked");
+            // SECURITY INCIDENT: someone is reusing a rotated token
+            // This is a strong signal of token theft.
+            // Response: revoke all sessions for this user immediately
+            log.warn("SECURITY ALERT: Revoked refresh token reuse detected for use {}. " + "Revoking all sessions.", storedToken.getUser().getEmail());
+
+            refreshTokenRepository.revokedAllByUserId(storedToken.getUser().getId(), Instant.now());
+
+            throw new AuthException(
+                    "Security issue detected. All sessions have been logged out. Please log in again."
+            );
         }
 
         if (storedToken.getExpiresAt().isBefore(Instant.now())) {

@@ -1,0 +1,39 @@
+package com.brijesh.authservice.config;
+
+import lombok.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+
+@Configuration
+public class CorsConfig {
+
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource(){
+        CorsConfiguration config = new CorsConfiguration();
+
+        if ("*".equals(frontendUrl)){
+            // Development - allow all origins
+            config.setAllowedOriginPatterns(List.of("*"));
+        } else {
+            // Production - only your frontend
+            config.setAllowedOrigins(List.of(frontendUrl));
+        }
+
+        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH"));
+        config.setAllowedHeaders(List.of("Authorization","Content-Type"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**",config);
+        return source;
+    }
+}
