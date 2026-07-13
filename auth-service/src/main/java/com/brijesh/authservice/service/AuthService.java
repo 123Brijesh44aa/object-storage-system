@@ -46,11 +46,12 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final RedisTokenService redisTokenService;
     private final LoginAttemptService loginAttemptService;
+    private final EmailVerificationService emailVerificationService;
 
 
     // Register
     @Transactional
-    public AuthResponse register(RegisterRequest request, HttpServletRequest httpRequest) throws AuthException {
+    public void register(RegisterRequest request, HttpServletRequest httpRequest) throws AuthException {
         // 1. Check email isn't already taken
         if (userRepository.existsByEmail(request.getEmail())){
             throw new AuthException("Email already registered");
@@ -66,16 +67,17 @@ public class AuthService {
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .isEnabled(true)   // set false and verify email
+                .isEnabled(false)   // set false and verify email
                 .roles(Set.of(userRole))
                 .build();
 
         userRepository.save(user);
         log.info("New user registered: {}", user.getEmail());
 
-        // 4. Generate tokens
-        CustomUserDetails userDetails = new CustomUserDetails(user);
-        return buildAuthResponse(userDetails,httpRequest);
+        // Send verification email asynchronously
+        emailVerificationService.sendVerificationEmail(user);
+
+        log.info("New user registered, verification email sent : {} ", user.getEmail());
     }
 
 
@@ -100,12 +102,32 @@ public class AuthService {
 
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
+            // Check email verification
+            if (!userDetails.getUser().getIsEnabled()){
+                throw new AuthException(
+                        "Email not verified. Please check your inbox."
+                );
+            }
+
+            loginAttemptService.recordSuccessfulLogin(user);
+
             log.info("User logged in: {}", userDetails.getEmail());
             return buildAuthResponse(userDetails, httpRequest);
         } catch (BadCredentialsException ex){
             loginAttemptService.recordFailedAttempts(user);
             throw new AuthException("Invalid Credentials");
         }
+    }
+
+    @Transactional
+    public void resendVerification(String email){
+        userRepository.findByEmail(email).ifPresent(user -> {
+            if (!user.getIsEnabled()){
+                emailVerificationService.sendVerificationEmail(user);
+            }
+        });
+
+        // No else - we don't reveal if email is registered or already verified
     }
 
     // Refresh
