@@ -1,5 +1,10 @@
 package com.brijesh.authservice.web.controller;
 
+import com.brijesh.authservice.infrastructure.redis.RedisTokenService;
+import com.brijesh.authservice.security.CustomUserDetails;
+import com.brijesh.authservice.security.CustomUserDetailsService;
+import com.brijesh.authservice.security.JwtClaimsExtractor;
+import com.brijesh.authservice.security.JwtTokenProvider;
 import com.brijesh.authservice.service.AuthService;
 import com.brijesh.authservice.service.EmailVerificationService;
 import com.brijesh.authservice.service.PasswordResetService;
@@ -12,7 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -22,6 +29,9 @@ public class AuthController {
     private final AuthService authService;
     private final EmailVerificationService emailVerificationService;
     private final PasswordResetService passwordResetService;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RedisTokenService redisTokenService;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @PostMapping("/register")
     public ResponseEntity<Map<String,String>> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest httpRequest){
@@ -88,6 +98,43 @@ public class AuthController {
     }
 
 
+
+    @GetMapping("/introspect")
+    public ResponseEntity<JwtClaimsExtractor> introspect(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.startsWith("Bearer ")
+                ? authHeader.substring(7)
+                : authHeader;
+
+        if (!jwtTokenProvider.isTokenValid(token)){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String jti = jwtTokenProvider.extractTokenId(token);
+        if (redisTokenService.isTokenBlacklisted(jti)){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String uuid = jwtTokenProvider.extractUserUuid(token);
+
+        CustomUserDetails userDetails = (CustomUserDetails) customUserDetailsService.loadUserByUuid(uuid);
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(a -> a.getAuthority())
+                .filter(a -> a.startsWith("ROLE_"))
+                .collect(Collectors.toList());
+
+        List<String> permissions = userDetails.getAuthorities().stream()
+                .map(a -> a.getAuthority())
+                .filter(a -> !a.startsWith("ROLE_"))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(JwtClaimsExtractor.builder()
+                .userUuid(uuid)
+                .email(userDetails.getEmail())
+                .roles(roles)
+                .permissions(permissions)
+                .build());
+    }
 
 }
 
