@@ -2,9 +2,8 @@ package com.brijesh.authservice.web.controller;
 
 import com.brijesh.authservice.service.AuthService;
 import com.brijesh.authservice.service.EmailVerificationService;
-import com.brijesh.authservice.web.dto.request.LoginRequest;
-import com.brijesh.authservice.web.dto.request.RefreshTokenRequest;
-import com.brijesh.authservice.web.dto.request.RegisterRequest;
+import com.brijesh.authservice.service.PasswordResetService;
+import com.brijesh.authservice.web.dto.request.*;
 import com.brijesh.authservice.web.dto.response.AuthResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -22,6 +21,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final EmailVerificationService emailVerificationService;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     public ResponseEntity<Map<String,String>> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest httpRequest){
@@ -68,4 +68,50 @@ public class AuthController {
         authService.logout(accessToken,request.getRefreshToken());
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String,String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.forgotPassword(request.getEmail());
+
+        // Always return same message - don't reveal if email exists
+        return ResponseEntity.ok(Map.of("message","If this email is registered, a password reset link has been sent."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String,String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request){
+        passwordResetService.resetPassword(
+                request.getToken(),
+                request.getNewPassword()
+        );
+
+        return ResponseEntity.ok(Map.of("message","Password reset successful. Please login with your new password"));
+    }
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

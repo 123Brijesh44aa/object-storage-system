@@ -27,7 +27,6 @@ public class EmailService {
     @Async
     public void sendVerificationEmail(String toEmail, String firstName, String rawToken){
         String verificationLink = "http://localhost:8080/api/v1/auth/verify-email?token="+rawToken;
-
         String subject = "Verify your email address";
         String body = String.format("""
                 Hi %s,
@@ -44,7 +43,30 @@ public class EmailService {
                 Object Storage System
                 
                 """, firstName,verificationLink);
+        sendEmail(toEmail,subject,body);
+    }
 
+    @Async
+    public void sendPasswordResetEmail(String toEmail, String firstName, String rawToken){
+        String resetLink = "http://localhost:8080/api/v1/auth/reset-password?token="+rawToken;
+        String subject = "Reset your password";
+        String body = String.format("""
+                Hi %s,
+                
+                We received a request to reset your password.
+                Click the link below to set a new password:
+                
+                %s
+                
+                This link expires in 1 hour.
+                
+                If you did not request a password reset, please ignore this email.
+                Your password will not be changed.
+                
+                Regards,
+                Object Storage system
+                
+                """, firstName,resetLink);
         sendEmail(toEmail,subject,body);
     }
 

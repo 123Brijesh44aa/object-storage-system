@@ -24,3 +24,4 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     """)
     void revokedAllByUserId(@Param("userId") Long userId, @Param("revokedAt") Instant revokedAt);
 }
+
