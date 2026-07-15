@@ -46,7 +46,29 @@ spring:
       starttls:
        enable: true
 
- # App Custom Properties
+# OAuth2
+ security:
+   oauth2:
+     client:
+       registration:
+         github:
+           client-id: ${GITHUB_CLIENT_ID}
+           client-secret: ${GITHUB_CLIENT_SECRET}
+           scope:
+             - read:user
+             - user:email
+           redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+
+#         google:
+#           client-id: ${GOOGLE_CLIENT_ID}
+#           client-secret: ${GOOGLE_CLIENT_SECRET}
+#           scope:
+#             - openid
+#             - email
+#             - profile
+#           redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}""
+
+  # App Custom Properties
 app:
   frontend-url: ${FRONTEND_URL:*}
   jwt:

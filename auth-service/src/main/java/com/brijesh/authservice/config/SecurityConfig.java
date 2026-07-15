@@ -4,6 +4,9 @@ package com.brijesh.authservice.config;
 import com.brijesh.authservice.security.CustomUserDetailsService;
 import com.brijesh.authservice.security.JwtAuthenticationFilter;
 import com.brijesh.authservice.security.RateLimitFilter;
+import com.brijesh.authservice.security.oauth2.CustomOAuth2UserService;
+import com.brijesh.authservice.security.oauth2.OAuth2AuthenticationFailureHandler;
+import com.brijesh.authservice.security.oauth2.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +37,10 @@ public class SecurityConfig {
     private final RateLimitFilter rateLimitFilter;
     private final CorsConfigurationSource corsConfigurationSource;
 
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+
     // - Endpoints anyone can access without a token
     private static final String[] PUBLIC_URLS = {
             "/api/v1/auth/**",
@@ -41,7 +48,9 @@ public class SecurityConfig {
             "/swagger-ui/**",// Swagger UI
             "/swagger-ui.html",
             "/actuator/health",
-            "/error"
+            "/error",
+            "/login/oauth2/**",  // <- OAuth2 callback URLs
+            "/oauth2/**"         // <- OAuth2 initiation URLs
     };
 
     private static final String[] ADMIN_URLS = {
@@ -61,6 +70,15 @@ public class SecurityConfig {
                                 .includeSubDomains(true)
                                 .maxAgeInSeconds(31536000)  // force https for 1 year
                         )
+                )
+
+                // OAuth2 configuration
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
+                        .failureHandler(oAuth2AuthenticationFailureHandler)
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 // Authorization rules

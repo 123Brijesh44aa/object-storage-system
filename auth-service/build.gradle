@@ -27,6 +27,7 @@ dependencies {
 
 	// Email Verification
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	testImplementation 'org.testcontainers:mysql'
