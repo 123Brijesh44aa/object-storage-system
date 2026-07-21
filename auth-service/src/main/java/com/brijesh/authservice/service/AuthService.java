@@ -47,6 +47,7 @@ public class AuthService {
     private final RedisTokenService redisTokenService;
     private final LoginAttemptService loginAttemptService;
     private final EmailVerificationService emailVerificationService;
+    private final AuditService auditService;
 
 
     // Register
@@ -78,6 +79,7 @@ public class AuthService {
         emailVerificationService.sendVerificationEmail(user);
 
         log.info("New user registered, verification email sent : {} ", user.getEmail());
+        auditService.logRegistration(user.getUuid(),user.getEmail(),getClientIp(httpRequest));
     }
 
 
@@ -112,9 +114,11 @@ public class AuthService {
             loginAttemptService.recordSuccessfulLogin(user);
 
             log.info("User logged in: {}", userDetails.getEmail());
+            auditService.logLogin(userDetails.getUuid(),userDetails.getEmail(),getClientIp(httpRequest));
             return buildAuthResponse(userDetails, httpRequest);
         } catch (BadCredentialsException ex){
             loginAttemptService.recordFailedAttempts(user);
+            auditService.logFailedLogin(request.getEmail(),getClientIp(httpRequest),"Invalid credentials");
             throw new AuthException("Invalid Credentials");
         }
     }
@@ -153,7 +157,8 @@ public class AuthService {
     // Logout
 
     @Transactional
-    public void logout(String accessToken, String refreshToken){
+    public void logout(String accessToken, String refreshToken, HttpServletRequest httpServletRequest){
+        String userUuid = jwtTokenProvider.extractUserUuid(accessToken);
         // 1. Blacklist the access token for its remaining lifetime
         if (jwtTokenProvider.isTokenValid(accessToken)){
             String jti = jwtTokenProvider.extractTokenId(accessToken);
@@ -170,6 +175,7 @@ public class AuthService {
         }
 
         log.info("User logged out, tokens revoked");
+        auditService.logLogout(userUuid,getClientIp(httpServletRequest));
     }
 
 

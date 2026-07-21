@@ -18,6 +18,7 @@ import java.time.Instant;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AuditService auditService;
 
     // Save a newly issued Refresh token (hashed).
     @Transactional
@@ -50,9 +51,17 @@ public class RefreshTokenService {
 
             refreshTokenRepository.revokedAllByUserId(storedToken.getUser().getId(), Instant.now());
 
+            auditService.logSuspiciousActivity(
+                    storedToken.getUser().getUuid(),
+                    storedToken.getUser().getEmail(),
+                    "Revoked refresh token reuse detected",
+                    "unknown"
+            );
+
             throw new AuthException(
                     "Security issue detected. All sessions have been logged out. Please log in again."
             );
+
         }
 
         if (storedToken.getExpiresAt().isBefore(Instant.now())) {

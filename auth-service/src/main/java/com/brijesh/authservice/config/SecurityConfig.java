@@ -3,6 +3,7 @@ package com.brijesh.authservice.config;
 
 import com.brijesh.authservice.security.CustomUserDetailsService;
 import com.brijesh.authservice.security.JwtAuthenticationFilter;
+import com.brijesh.authservice.security.MdcFilter;
 import com.brijesh.authservice.security.RateLimitFilter;
 import com.brijesh.authservice.security.oauth2.CustomOAuth2UserService;
 import com.brijesh.authservice.security.oauth2.OAuth2AuthenticationFailureHandler;
@@ -36,6 +37,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final RateLimitFilter rateLimitFilter;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final MdcFilter mdcFilter;
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
@@ -92,7 +94,8 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(rateLimitFilter, SecurityContextHolderFilter.class)
+                .addFilterBefore(mdcFilter,SecurityContextHolderFilter.class)
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

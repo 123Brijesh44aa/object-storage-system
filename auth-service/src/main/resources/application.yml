@@ -3,9 +3,12 @@ spring:
   name:
    auth-service
 
- # --- Database ---------------------------------------------
+ profiles:
+   active: ${SPRING_PROFILES_ACTIVE:dev} # default to dev
+
+  # --- Database ---------------------------------------------
  datasource:
-  url: jdbc:mysql://localhost:3308/auth_service_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+  url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3308}/${DB_NAME:auth_service_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
   username: ${DB_USERNAME}
   password: ${DB_ROOT_PASSWORD}
   driver-class-name: com.mysql.cj.jdbc.Driver
@@ -14,7 +17,7 @@ spring:
  jpa:
    hibernate:
     ddl-auto: validate            # Flyway manages schema, hibernates only validates
-   show-sql: true
+   show-sql: false
    properties:
      hibernate:
        dialect: org.hibernate.dialect.MySQL8Dialect
@@ -35,8 +38,8 @@ spring:
 
  # Mail
  mail:
-   host: ${MAIL_HOST}
-   port: ${MAIL_PORT}
+   host: ${MAIL_HOST:sandbox.smtp.mailtrap.io}
+   port: ${MAIL_PORT:2525}
    username: ${MAIL_USERNAME}
    password: ${MAIL_PASSWORD}
    properties:
@@ -88,3 +91,13 @@ logging:
  level:
    com.brijesh: DEBUG
    org.springframework.security: DEBUG
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: when_authorized  # prod: hide details from public

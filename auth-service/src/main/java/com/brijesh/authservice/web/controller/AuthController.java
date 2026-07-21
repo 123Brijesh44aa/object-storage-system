@@ -73,9 +73,9 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authHeader, @Valid @RequestBody RefreshTokenRequest request){
+    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authHeader, @Valid @RequestBody RefreshTokenRequest request, HttpServletRequest httpRequest){
         String accessToken = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
-        authService.logout(accessToken,request.getRefreshToken());
+        authService.logout(accessToken,request.getRefreshToken(),httpRequest);
         return ResponseEntity.noContent().build();
     }
 
