@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: EurekaServer
+
+server:
+  port: 8761
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    # Eureka server should not register itself as a client
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+  server:
+    # Wait time before evicting unhealthy instances
+    eviction-interval-timer-in-ms: 10000
+    # How long to wait before removing instance with no heartbeat
+    response-cache-update-interval-ms: 5000
+  # Eureka server should not register itself as a client
+
+logging:
+  level:
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
