@@ -1,0 +1,83 @@
+spring:
+  application:
+    name: ApiGateway
+
+
+# Redis for blacklist checking
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:brijesh}
+
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+          routes:
+            - id: auth-public
+              uri: lb://auth-service    # lb = load balanced via Eureka
+              predicates:
+                - Path=/api/v1/auth/**
+              filters:
+                - name: RequestRateLimiter  # Gateway-level rate limiting
+                  args:
+                    redis-rate-limiter.replenishRate: 10
+                    redis-rate-limiter.burstCapacity: 20
+            - id: auth-protected
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/v1/users/**
+              filters:
+                - AuthenticationFilter   # our custom JWT filter
+            - id: admin-routes
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/v1/admin/**
+              filters:
+                - AuthenticationFilter
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowed-origins: ${FRONTEND_URL:*}
+                allowed-methods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - PATCH
+                  - OPTIONS
+                allowed-headers:
+                  - Authorization
+                  - Content-Type
+                allow-credentials: true
+
+server:
+  port: 8080
+
+# Eureka Registration
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.brijesh.apigateway: DEBUG
