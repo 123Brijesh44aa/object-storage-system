@@ -22,6 +22,12 @@ eureka:
     response-cache-update-interval-ms: 5000
   # Eureka server should not register itself as a client
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+
 logging:
   level:
     com.netflix.eureka: WARN
