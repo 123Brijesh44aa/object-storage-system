@@ -15,7 +15,7 @@ import java.time.Instant;
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
-        property = "everyType"
+        property = "eventType"
 )
 @JsonSubTypes({
         @JsonSubTypes.Type(value = UserRegisteredEvent.class, name = "USER_REGISTERED"),

@@ -4,7 +4,7 @@ package com.brijesh.authservice.service;
 import com.brijesh.authservice.domain.entity.EmailVerificationToken;
 import com.brijesh.authservice.domain.entity.User;
 import com.brijesh.authservice.domain.exception.AuthException;
-import com.brijesh.authservice.infrastructure.email.EmailService;
+import com.brijesh.authservice.infrastructure.kafka.KafkaEventPublisher;
 import com.brijesh.authservice.repository.EmailVerificationTokenRepository;
 import com.brijesh.authservice.repository.UserRepository;
 import com.brijesh.authservice.security.TokenHashUtil;
@@ -23,7 +23,7 @@ public class EmailVerificationService {
 
     private final EmailVerificationTokenRepository tokenRepository;
     private final UserRepository userRepository;
-    private final EmailService emailService;
+    private final KafkaEventPublisher kafkaEventPublisher;
 
     private static final long TOKEN_EXPIRY_HOURS = 24;
 
@@ -47,14 +47,15 @@ public class EmailVerificationService {
 
         tokenRepository.save(token);
 
-        // Send raw token in email
-        emailService.sendVerificationEmail(
+        // Publish event instead of sending email directly
+        kafkaEventPublisher.publishEmailVerificationRequested(
+                user.getUuid(),
                 user.getEmail(),
                 user.getFirstName(),
                 rawToken
         );
 
-        log.info("Verification email sent to : {} ", user.getEmail());
+        log.info("Email Verification event published for : {} ", user.getEmail());
     }
 
     @Transactional

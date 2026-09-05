@@ -18,6 +18,10 @@ repositories {
 	mavenCentral()
 }
 
+ext {
+	set('springCloudVersion', "2025.0.0")
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -26,12 +30,15 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
 	// Email Verification
-	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.kafka:spring-kafka'
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	testImplementation 'org.testcontainers:mysql'
+	testImplementation 'org.springframework.kafka:spring-kafka-test'
+	testImplementation 'org.testcontainers:kafka'
 
 	// Dev Tools
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
@@ -72,6 +79,7 @@ dependencies {
 dependencyManagement {
 	imports {
 		mavenBom('org.testcontainers:testcontainers-bom:1.20.3')
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
 	}
 }
 

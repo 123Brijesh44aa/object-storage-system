@@ -5,6 +5,7 @@ import com.brijesh.authservice.config.AppProperties;
 import com.brijesh.authservice.domain.entity.Role;
 import com.brijesh.authservice.domain.entity.User;
 import com.brijesh.authservice.domain.exception.AuthException;
+import com.brijesh.authservice.infrastructure.kafka.KafkaEventPublisher;
 import com.brijesh.authservice.infrastructure.redis.RedisTokenService;
 import com.brijesh.authservice.repository.RoleRepository;
 import com.brijesh.authservice.repository.UserRepository;
@@ -48,6 +49,7 @@ public class AuthService {
     private final LoginAttemptService loginAttemptService;
     private final EmailVerificationService emailVerificationService;
     private final AuditService auditService;
+    private final KafkaEventPublisher kafkaEventPublisher;
 
 
     // Register
@@ -75,10 +77,11 @@ public class AuthService {
         userRepository.save(user);
         log.info("New user registered: {}", user.getEmail());
 
-        // Send verification email asynchronously
+
+        // Send verification email via kafka
         emailVerificationService.sendVerificationEmail(user);
 
-        log.info("New user registered, verification email sent : {} ", user.getEmail());
+
         auditService.logRegistration(user.getUuid(),user.getEmail(),getClientIp(httpRequest));
     }
 

@@ -3,7 +3,7 @@ package com.brijesh.authservice.service;
 import com.brijesh.authservice.domain.entity.PasswordResetToken;
 import com.brijesh.authservice.domain.entity.User;
 import com.brijesh.authservice.domain.exception.AuthException;
-import com.brijesh.authservice.infrastructure.email.EmailService;
+import com.brijesh.authservice.infrastructure.kafka.KafkaEventPublisher;
 import com.brijesh.authservice.infrastructure.redis.RedisTokenService;
 import com.brijesh.authservice.repository.PasswordResetTokenRepository;
 import com.brijesh.authservice.repository.RefreshTokenRepository;
@@ -29,12 +29,12 @@ public class PasswordResetService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
 
     private static final long TOKEN_EXPIRY_HOURS = 1; // shorter than email verification
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTokenService redisTokenService;
+    private final KafkaEventPublisher kafkaEventPublisher;
 
     // Forgot Password
 
@@ -62,14 +62,15 @@ public class PasswordResetService {
 
             passwordResetTokenRepository.save(token);
 
-            // Send email asynchronously
-            emailService.sendPasswordResetEmail(
+            // Publish event instead of sending email directly
+            kafkaEventPublisher.publishPasswordResetRequested(
+                    user.getUuid(),
                     user.getEmail(),
                     user.getFirstName(),
                     rawToken
             );
 
-            log.info("Password reset email sent to: {}", email);
+            log.info("Password reset event published for: {}", email);
         });
     }
 

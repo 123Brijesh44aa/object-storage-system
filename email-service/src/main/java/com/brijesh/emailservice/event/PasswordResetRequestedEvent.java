@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class PasswordResetRequestedEvent {
+public class PasswordResetRequestedEvent extends BaseEvent {
 
     private String userUuid;
     private String email;
