@@ -1,0 +1,71 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.14'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.brijesh'
+version = '0.0.1-SNAPSHOT'
+description = 'storage-service'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('springCloudVersion', "2025.0.0")
+}
+
+dependencies {
+
+    // Core
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    // MinIO
+    implementation 'io.minio:minio:8.5.7'
+
+    // Service Discovery
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+    // Feign Client (calls Metadata Service)
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+    // Circuit Breaker
+    implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Dev tools
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-kafka-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testCompileOnly 'org.projectlombok:lombok'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
