@@ -9,8 +9,8 @@ spring:
   # Database
   datasource:
     url: jdbc:mysql://${META_DB_HOST:localhost}:${META_DB_PORT:3311}/${META_DB_NAME:metadata_service_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-    username: ${META_DB_USERNAME}
-    password: ${META_DB_ROOT_PASSWORD}
+    username: ${META_DB_USERNAME:root}
+    password: ${META_DB_ROOT_PASSWORD:brijesh}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   # ---- JPA -----------------------------------
@@ -41,7 +41,7 @@ spring:
       properties:
         spring.json.trusted.packages: "*"
         spring.json.use.type.headers: false
-        spring.json.value.default.type: com.brijesh.metadataservice.event.BaseEvent
+#        spring.json.value.default.type: com.brijesh.metadataservice.event.BaseEvent
 server:
   port: 8084
 
