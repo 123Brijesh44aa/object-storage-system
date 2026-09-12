@@ -134,6 +134,13 @@ spring:
             - Path=/api/v1/admin/**
           filters:
             - AuthenticationFilter
+        # Metadata routes
+        - id: metadata-routes
+          uri: lb://metadata-service
+          predicates:
+            - Path=/api/v1/metadata/**
+          filters:
+            - AuthenticationFilter
 
       # Global CORS
       globalcors:
