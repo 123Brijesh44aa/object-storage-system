@@ -90,6 +90,9 @@ spring:
   application:
     name: ApiGateway
 
+  codec:
+    max-in-memory-size: 100MB    # allow large file uploads through gateway
+
   # ── Redis ────────────────────────────────────────────────
   data:
     redis:
@@ -104,6 +107,10 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+      httpclient:
+        response-timeout: 60s
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 
       routes:
 
@@ -139,6 +146,13 @@ spring:
           uri: lb://metadata-service
           predicates:
             - Path=/api/v1/metadata/**
+          filters:
+            - AuthenticationFilter
+        # Storage Service Routes
+        - id: storage-routes
+          uri: lb://storage-service
+          predicates:
+            - Path=/api/v1/storage/**
           filters:
             - AuthenticationFilter
 
